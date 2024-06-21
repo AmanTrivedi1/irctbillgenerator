@@ -1,0 +1,25 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Bill {
+  id          String        @id @default(uuid())
+  totalAmount Float
+  createdAt   DateTime      @default(now())
+  entries     DetailEntry[]
+}
+
+model DetailEntry {
+  id        String   @id @default(uuid())
+  detail    String
+  amount    Float
+  billId    String
+  bill      Bill     @relation(fields: [billId], references: [id])
+}
