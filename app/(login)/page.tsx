@@ -36,11 +36,11 @@ export default function LoginPage() {
 
   return (
     
-    <div className="max-w-md w-full mx-auto rounded-2xl p-4 md:p-8 shadow-input bg-black">
-      <h2 className="font-bold text-xl  text-neutral-200">
+    <div className="max-w-md w-full mx-auto rounded-2xl p-4 md:p-8 shadow-input ">
+      <h2 className="font-bold text-xl  ">
           Welcome to IRCTS Login
       </h2>
-      <p className=" text-sm max-w-sm mt-2 text-neutral-300">
+      <p className=" text-sm max-w-sm mt-2 ">
           Log in to begin with bill generator options.
       </p>
 

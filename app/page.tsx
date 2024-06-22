@@ -6,7 +6,7 @@ export default function Home() {
   return (
   
     <>
-       <div className=" grid place-items-center bg-black min-h-screen">
+       <div className=" grid place-items-center  min-h-screen">
            <LoginPage/>
        </div>
     </>
