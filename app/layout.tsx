@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import toast, { Toaster } from 'react-hot-toast';
+import { Toaster } from 'sonner';
 import {  Poppins } from "next/font/google";
 import "./globals.css";
+import Sidebar from "./components/sidebar";
 
 const poppins = Poppins({ subsets: ["latin"] , weight:["300" , "400" , "500" , "600"] });
 
@@ -18,7 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
-        {children}
+      <div className="flex">
+          <Sidebar />
+          <main className="flex-grow p-4">{children}</main>
+        </div>
         <Toaster />
       </body>
     </html>

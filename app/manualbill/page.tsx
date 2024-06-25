@@ -4,6 +4,7 @@ import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import DynamicForm from '@/components/DynamicForm'
 
+
 const ManualPage = () => {
   const router = useRouter()
 
@@ -20,9 +21,10 @@ const ManualPage = () => {
   }, [router])
 
   return (
-    <div className='min-h-screen '>
-         <DynamicForm />
-    </div>
+    <>
+      <DynamicForm />
+    </>
+            
   )
 }
 

@@ -1,7 +1,10 @@
+"use client"
 import React, { useState, useEffect } from 'react';
 import { Input } from './ui/input';
+import { useRouter } from 'next/navigation'
 import { Button } from './ui/button';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { Loader } from 'lucide-react';
 
 interface InputPair {
   id: string;
@@ -12,6 +15,22 @@ interface InputPair {
 const DynamicForm: React.FC = () => {
   const [inputPairs, setInputPairs] = useState<InputPair[]>([{ id: crypto.randomUUID(), detail: '', amount: '' }]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter()
+
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail')
+    const userPassword = localStorage.getItem('userPassword')
+
+    const ENV_USER_EMAIL = process.env.NEXT_PUBLIC_USER_ID
+    const ENV_USER_PASSWORD = process.env.NEXT_PUBLIC_USER_PASSWORD
+
+   
+
+    if (userEmail !== ENV_USER_EMAIL || userPassword !== ENV_USER_PASSWORD) {
+      router.push('/')
+    }
+  }, [])
 
   useEffect(() => {
     const newTotal = inputPairs.reduce((sum, pair) => sum + (parseFloat(pair.amount) || 0), 0);
@@ -32,10 +51,12 @@ const DynamicForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const nonEmptyPairs = inputPairs.filter(pair => pair.detail.trim() !== '' && pair.amount.trim() !== '');
       if (nonEmptyPairs.length === 0) {
         toast.error("Please enter at least one valid entry");
+        setIsSubmitting(false);
         return;
       }
       const response = await fetch('/api/action', {
@@ -54,8 +75,11 @@ const DynamicForm: React.FC = () => {
     } catch (error) {
       console.error('Error:', error);
       toast.error("Error while saving data!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
 
 
 
@@ -91,7 +115,7 @@ const DynamicForm: React.FC = () => {
     <div className='flex flex-col w-full md:p-4 p-2 '>
       <div className=' mb-2'>
         <h1 className='font-semibold text-4xl  '>Create Bill</h1>
-        <p>Enter the description about the bill that you want in your bill</p>
+        <p>Enter the description about the bill.</p>
       </div>
       <div className='max-w-7xl '>
         <form onSubmit={handleSubmit} className='flex gap-4 flex-col'>
@@ -117,7 +141,14 @@ const DynamicForm: React.FC = () => {
             <p className='font-semibold text-2xl'>Total Amount: {totalAmount.toFixed(2)}</p>
           </div>
           <div className='mt-2 flex gap-10'>
-            <Button type="submit">Save</Button>
+           <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <> 
+              <div className='flex items-center'>
+                 <p>Saving</p>
+                 <Loader  className='animate-spin text-xs'/>
+              </div>
+               </> : 'Save'}
+           </Button>
             <Button type="button" onClick={addInputPair}>Add More Section</Button>
             <Button type="button"  onClick={handleExportToPdf}>Export to PDF</Button>
           </div>

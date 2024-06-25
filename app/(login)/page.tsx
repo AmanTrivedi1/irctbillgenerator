@@ -18,7 +18,7 @@ export default function LoginPage() {
         const storedPassword = localStorage.getItem('userPassword');
 
         if (storedEmail === USER_ID && storedPassword === USER_PASSWORD) {
-            router.push('/bill');
+            router.push('/manualbill');
         }
     }, [router, USER_ID, USER_PASSWORD]);
 
@@ -28,7 +28,7 @@ export default function LoginPage() {
       if (email === USER_ID && password === USER_PASSWORD) {
         localStorage.setItem('userEmail', email);
         localStorage.setItem('userPassword', password);
-        router.push('/bill');
+        router.push('/manualbill');
       } else {
         console.log('Invalid credentials');
       }
