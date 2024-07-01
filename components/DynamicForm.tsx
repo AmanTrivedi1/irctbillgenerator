@@ -4,7 +4,10 @@ import { Input } from './ui/input';
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button';
 import { toast } from 'sonner';
-import { Loader } from 'lucide-react';
+import { CalendarIcon, Loader } from 'lucide-react';
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface InputPair {
   id: string;
@@ -12,11 +15,43 @@ interface InputPair {
   amount: string;
 }
 
+interface DefaultFields {
+  orderNo: string;
+  deliveryDateTime: Date | undefined;
+  deliveryStation: string;
+  customerName: string;
+  customerContact: string;
+  trainNumber: string;
+  pnrNumber: string;
+  coach: string;
+  seat: string;
+  paymentMode: string;
+  customerNote: string;
+}
+
 const DynamicForm: React.FC = () => {
+  const [defaultFields, setDefaultFields] = useState<DefaultFields>({
+    orderNo: '',
+    deliveryDateTime: undefined,
+    deliveryStation: '',
+    customerName: '',
+    customerContact: '',
+    trainNumber: '',
+    pnrNumber: '',
+    coach: '',
+    seat: '',
+    paymentMode: '',
+    customerNote: '',
+  });
   const [inputPairs, setInputPairs] = useState<InputPair[]>([{ id: crypto.randomUUID(), detail: '', amount: '' }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter()
+
+  const handleDefaultFieldChange = (field: keyof DefaultFields, value: string | Date | undefined) => {
+    setDefaultFields(prev => ({ ...prev, [field]: value }));
+  };
+
 
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail')
@@ -41,6 +76,7 @@ const DynamicForm: React.FC = () => {
     setInputPairs([...inputPairs, { id: crypto.randomUUID(), detail: '', amount: '' }]);
   };
 
+
   const handleInputChange = (id: string, field: 'detail' | 'amount', value: string) => {
     setInputPairs(
       inputPairs.map((pair) =>
@@ -48,6 +84,9 @@ const DynamicForm: React.FC = () => {
       )
     );
   };
+
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,14 +98,34 @@ const DynamicForm: React.FC = () => {
         setIsSubmitting(false);
         return;
       }
-      const response = await fetch('/api/action', {
+      const response = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputPairs: nonEmptyPairs }),
+        body: JSON.stringify({ 
+          defaultFields: {
+            ...defaultFields,
+            deliveryDateTime: defaultFields.deliveryDateTime ? format(defaultFields.deliveryDateTime, "yyyy-MM-dd'T'HH:mm:ss") : null,
+          },
+          inputPairs: nonEmptyPairs,
+          totalAmount
+        }),
       });
       if (response.ok) {
         const result = await response.json();
         toast.success("Data Saved!");
+        setDefaultFields({
+          orderNo: '',
+          deliveryDateTime: undefined,
+          deliveryStation: '',
+          customerName: '',
+          customerContact: '',
+          trainNumber: '',
+          pnrNumber: '',
+          coach: '',
+          seat: '',
+          paymentMode: '',
+          customerNote: '',
+        });
         setInputPairs([{ id: crypto.randomUUID(), detail: '', amount: '' }]);
         setTotalAmount(0);
       } else {
@@ -81,8 +140,6 @@ const DynamicForm: React.FC = () => {
   };
 
 
-
-
   const handleExportToPdf = async () => {
     try {
       const nonEmptyPairs = inputPairs.filter(pair => pair.detail.trim() !== '' && pair.amount.trim() !== '');
@@ -90,13 +147,17 @@ const DynamicForm: React.FC = () => {
         toast.error("Please enter at least one valid entry");
         return;
       }
-
+  
       const response = await fetch('/api/pdfgenerate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputPairs: nonEmptyPairs, totalAmount }),
+        body: JSON.stringify({ 
+          defaultFields,
+          inputPairs: nonEmptyPairs, 
+          totalAmount 
+        }),
       });
-
+  
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -110,24 +171,125 @@ const DynamicForm: React.FC = () => {
     }
   };
 
-
   return (
-    <div className='flex flex-col w-full md:p-4 p-2 '>
+    <div className='flex flex-col w-full md:p-4  '>
       <div className=' mb-2'>
         <h1 className='font-semibold text-4xl  '>Create Bill</h1>
         <p>Enter the description about the bill.</p>
       </div>
-      <div className='max-w-7xl '>
+      <div className='max-w-7xl mt-4 '>
         <form onSubmit={handleSubmit} className='flex gap-4 flex-col'>
+          {/* Default Fields */}
+          <label  className='-mb-4' htmlFor="deliveryDateTime">Order Number</label>
+          <Input
+            type="text"
+            value={defaultFields.orderNo}
+            onChange={(e) => handleDefaultFieldChange('orderNo', e.target.value)}
+            placeholder="Order No"
+          />
+           <label className='-mb-4' htmlFor="deliveryDateTime">Delivery Date Time</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={`w-full justify-start text-left font-normal ${
+                    !defaultFields.deliveryDateTime && "text-muted-foreground"
+                  }`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {defaultFields.deliveryDateTime ? (
+                    format(defaultFields.deliveryDateTime, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={defaultFields.deliveryDateTime}
+                  onSelect={(date) =>
+                    handleDefaultFieldChange('deliveryDateTime', date)
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          <label  className='-mb-4' htmlFor="deliveryDateTime">Delivery Stattion</label>
+          <Input
+            type="text"
+            value={defaultFields.deliveryStation}
+            onChange={(e) => handleDefaultFieldChange('deliveryStation', e.target.value)}
+            placeholder="Delivery Station"
+          />
+          <label  className='-mb-4' htmlFor="deliveryDateTime">Customer Name</label>
+          <Input
+            type="text"
+            value={defaultFields.customerName}
+            onChange={(e) => handleDefaultFieldChange('customerName', e.target.value)}
+            placeholder="Customer Name"
+          />
+          <label  className='-mb-4' htmlFor="deliveryDateTime">Customer Contact</label>
+          <Input
+            type="text"
+            value={defaultFields.customerContact}
+            onChange={(e) => handleDefaultFieldChange('customerContact', e.target.value)}
+            placeholder="Customer Contact"
+          />
+          <label  className='-mb-4' htmlFor="deliveryDateTime">Train Number</label>
+          <Input
+            type="text"
+            value={defaultFields.trainNumber}
+            onChange={(e) => handleDefaultFieldChange('trainNumber', e.target.value)}
+            placeholder="Train Number"
+          />
+          <label  className='-mb-4' htmlFor="deliveryDateTime">PNR Number</label>
+          <Input
+            type="text"
+            value={defaultFields.pnrNumber}
+            onChange={(e) => handleDefaultFieldChange('pnrNumber', e.target.value)}
+            placeholder="PNR Number"
+          />
+          <label  className='-mb-4' htmlFor="deliveryDateTime">Coach</label>
+          <Input
+            type="text"
+            value={defaultFields.coach}
+            onChange={(e) => handleDefaultFieldChange('coach', e.target.value)}
+            placeholder="Coach"
+          />
+          <label  className='-mb-4' htmlFor="deliveryDateTime">Seat</label>
+          <Input
+            type="text"
+            value={defaultFields.seat}
+            onChange={(e) => handleDefaultFieldChange('seat', e.target.value)}
+            placeholder="Seat"
+          />
+           <label  className='-mb-4' htmlFor="deliveryDateTime">Payment Method</label>
+          <Input
+            type="text"
+            value={defaultFields.paymentMode}
+            onChange={(e) => handleDefaultFieldChange('paymentMode', e.target.value)}
+            placeholder="Payment Mode"
+          />
+           <label  className='-mb-4' htmlFor="deliveryDateTime">Customer Note</label>
+          <Input
+            type="text"
+            value={defaultFields.customerNote}
+            onChange={(e) => handleDefaultFieldChange('customerNote', e.target.value)}
+            placeholder="Customer Note"
+          />
+          <h3 className='font-semibold text-xl'>Items:</h3>
           {inputPairs.map((pair) => (
             <div key={pair.id}>
               <div className='flex flex-col gap-5'>
+              <label  className='-mb-4' htmlFor="deliveryDateTime">Item Name</label>
                 <Input
                   type="text"
                   value={pair.detail}
                   onChange={(e) => handleInputChange(pair.id, 'detail', e.target.value)}
                   placeholder="Enter Description"
                 />
+                <label  className='-mb-4' htmlFor="deliveryDateTime">Item Price</label>
                 <Input
                   type="number"
                   value={pair.amount}
@@ -137,10 +299,14 @@ const DynamicForm: React.FC = () => {
               </div>
             </div>
           ))}
-          <div className='mt-4 fixed bottom-4 right-4  '>
+          
+          {/* Remaining Default Fields */}
+        
+          
+          <div className='mt-4  '>
             <p className='font-semibold text-2xl'>Total Amount: {totalAmount.toFixed(2)}</p>
           </div>
-          <div className='mt-2 flex gap-10'>
+          <div className='mt-2 flex flex-col sm:flex-row gap-10'>
            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? <> 
               <div className='flex items-center'>
@@ -149,8 +315,11 @@ const DynamicForm: React.FC = () => {
               </div>
                </> : 'Save'}
            </Button>
-            <Button type="button" onClick={addInputPair}>Add More Section</Button>
-            <Button type="button"  onClick={handleExportToPdf}>Export to PDF</Button>
+           <div className='flex gap-4'>
+             <Button className='w-full' type="button" onClick={addInputPair}>Add More Section</Button>
+             <Button className='w-full' type="button"  onClick={handleExportToPdf}>Export to PDF</Button>
+           </div>
+       
           </div>
         </form>
       </div>

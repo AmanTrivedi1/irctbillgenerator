@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from 'next/navigation'
 import { cn } from "@/utils/cn";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ export default function LoginPage() {
         const storedPassword = localStorage.getItem('userPassword');
 
         if (storedEmail === USER_ID && storedPassword === USER_PASSWORD) {
+            toast.success("Redirecting..")
             router.push('/manualbill');
         }
     }, [router, USER_ID, USER_PASSWORD]);
@@ -29,8 +31,10 @@ export default function LoginPage() {
         localStorage.setItem('userEmail', email);
         localStorage.setItem('userPassword', password);
         router.push('/manualbill');
+        toast.success("Redirecting to bill page...")
       } else {
         console.log('Invalid credentials');
+        toast.error("Please fill the right credentials")
       }
     };
 

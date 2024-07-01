@@ -19,9 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
-      <div className="flex">
-          <Sidebar />
-          <main className="flex-grow p-4">{children}</main>
+         <div className="flex sm:flex-row flex-col">
+            <Sidebar />
+            <main className="flex-grow p-4">{children}</main>
         </div>
         <Toaster />
       </body>

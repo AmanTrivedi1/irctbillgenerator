@@ -9,10 +9,22 @@ datasource db {
 }
 
 model Bill {
-  id          String        @id @default(uuid())
-  totalAmount Float
-  createdAt   DateTime      @default(now())
-  entries     DetailEntry[]
+  id               String        @id @default(uuid())
+  orderNo          String
+  deliveryDateTime DateTime
+  deliveryStation  String
+  customerName     String
+  customerContact  String
+  trainNumber      String
+  pnrNumber        String
+  coach            String
+  seat             String
+  amountPayable    Float
+  paymentMode      String
+  customerNote     String
+  totalAmount      Float
+  createdAt        DateTime      @default(now())
+  entries          DetailEntry[]
 }
 
 model DetailEntry {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+
 const prisma = new PrismaClient();
 
 interface InputPair {
@@ -8,9 +9,27 @@ interface InputPair {
   amount: string;
 }
 
+interface DefaultFields {
+  orderNo: string;
+  deliveryDateTime: string;
+  deliveryStation: string;
+  customerName: string;
+  customerContact: string;
+  trainNumber: string;
+  pnrNumber: string;
+  coach: string;
+  seat: string;
+  paymentMode: string;
+  customerNote: string;
+}
+
 export async function POST(request: Request) {
   try {
-    const { inputPairs } = await request.json() as { inputPairs: InputPair[] };
+    const { defaultFields, inputPairs, totalAmount } = await request.json() as { 
+      defaultFields: DefaultFields, 
+      inputPairs: InputPair[], 
+      totalAmount: number 
+    };
 
     const validPairs = inputPairs.filter(pair => pair.detail.trim() !== '' && pair.amount.trim() !== '');
 
@@ -18,11 +37,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No valid entries provided' }, { status: 400 });
     }
 
-    const totalAmount = validPairs.reduce((sum, pair) => sum + parseFloat(pair.amount), 0);
-
     const bill = await prisma.bill.create({
       data: {
         totalAmount,
+        orderNo: defaultFields.orderNo,
+        deliveryDateTime: new Date(defaultFields.deliveryDateTime),
+        deliveryStation: defaultFields.deliveryStation,
+        customerName: defaultFields.customerName,
+        customerContact: defaultFields.customerContact,
+        trainNumber: defaultFields.trainNumber,
+        pnrNumber: defaultFields.pnrNumber,
+        coach: defaultFields.coach,
+        seat: defaultFields.seat,
+        amountPayable: totalAmount,
+        paymentMode: defaultFields.paymentMode,
+        customerNote: defaultFields.customerNote,
         entries: {
           create: validPairs.map((pair) => ({
             detail: pair.detail,
