@@ -13,6 +13,7 @@ interface DefaultFields {
   orderNo: string;
   deliveryDateTime: string;
   deliveryStation: string;
+  deliveryTime: string; 
   customerName: string;
   customerContact: string;
   trainNumber: string;
@@ -37,11 +38,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No valid entries provided' }, { status: 400 });
     }
 
+    const [date, time] = defaultFields.deliveryDateTime.split('T');
+    const formattedTime = new Date(`${date}T${time}`).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+
     const bill = await prisma.bill.create({
       data: {
         totalAmount,
         orderNo: defaultFields.orderNo,
         deliveryDateTime: new Date(defaultFields.deliveryDateTime),
+        deliveryTime: formattedTime,
         deliveryStation: defaultFields.deliveryStation,
         customerName: defaultFields.customerName,
         customerContact: defaultFields.customerContact,

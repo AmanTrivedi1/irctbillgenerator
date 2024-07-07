@@ -1,5 +1,8 @@
 "use client"
 import React, { useState, useEffect } from 'react';
+import 'react-time-picker/dist/TimePicker.css';
+// import 'react-clock/dist/Clock.css';
+import TimePicker from 'react-time-picker';
 import { Input } from './ui/input';
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button';
@@ -18,6 +21,7 @@ interface InputPair {
 interface DefaultFields {
   orderNo: string;
   deliveryDateTime: Date | undefined;
+  deliveryTime: string | null;
   deliveryStation: string;
   customerName: string;
   customerContact: string;
@@ -33,6 +37,7 @@ const DynamicForm: React.FC = () => {
   const [defaultFields, setDefaultFields] = useState<DefaultFields>({
     orderNo: '',
     deliveryDateTime: undefined,
+    deliveryTime: '',
     deliveryStation: '',
     customerName: '',
     customerContact: '',
@@ -48,10 +53,9 @@ const DynamicForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter()
 
-  const handleDefaultFieldChange = (field: keyof DefaultFields, value: string | Date | undefined) => {
+  const handleDefaultFieldChange = (field: keyof DefaultFields, value: string | Date | null | undefined) => {
     setDefaultFields(prev => ({ ...prev, [field]: value }));
   };
-
 
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail')
@@ -105,6 +109,7 @@ const DynamicForm: React.FC = () => {
           defaultFields: {
             ...defaultFields,
             deliveryDateTime: defaultFields.deliveryDateTime ? format(defaultFields.deliveryDateTime, "yyyy-MM-dd'T'HH:mm:ss") : null,
+            deliveryTime: defaultFields.deliveryTime || '',
           },
           inputPairs: nonEmptyPairs,
           totalAmount
@@ -116,6 +121,7 @@ const DynamicForm: React.FC = () => {
         setDefaultFields({
           orderNo: '',
           deliveryDateTime: undefined,
+          deliveryTime: '',
           deliveryStation: '',
           customerName: '',
           customerContact: '',
@@ -187,7 +193,7 @@ const DynamicForm: React.FC = () => {
             onChange={(e) => handleDefaultFieldChange('orderNo', e.target.value)}
             placeholder="Order No"
           />
-           <label className='-mb-4' htmlFor="deliveryDateTime">Delivery Date Time</label>
+           <label className='-mb-4' htmlFor="deliveryDateTime">Delivery Date </label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -215,7 +221,14 @@ const DynamicForm: React.FC = () => {
                 />
               </PopoverContent>
             </Popover>
-          <label  className='-mb-4' htmlFor="deliveryDateTime">Delivery Stattion</label>
+            <label  className='-mb-4' htmlFor="deliveryDateTime">Delivery Time</label>
+            <TimePicker
+             onChange={(time) => handleDefaultFieldChange('deliveryTime', time as string | null)}
+             value={defaultFields.deliveryTime}
+             format="h:mm a"
+              />
+
+            <label  className='-mb-4' htmlFor="deliveryDateTime">Delivery Stattion</label>
           <Input
             type="text"
             value={defaultFields.deliveryStation}
