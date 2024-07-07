@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   page.drawText(`Date: ${formattedDate}`, { x: width - 150, y: height - 20, size: 10 });
   page.drawText(`Time: ${formattedTime}`, { x: width - 150, y: height - 35, size: 10 });
 
-  page.drawText('IRCTC BILL RECEIPT', { x: 50, y, size: 16 });
+  page.drawText("The Chef's Touch", { x: 50, y, size: 16 });
   y -= 30;
 
   // Draw default fields
