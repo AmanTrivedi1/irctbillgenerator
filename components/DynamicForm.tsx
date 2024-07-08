@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import 'react-time-picker/dist/TimePicker.css';
-// import 'react-clock/dist/Clock.css';
+import 'react-clock/dist/Clock.css';
 import TimePicker from 'react-time-picker';
 import { Input } from './ui/input';
 import { useRouter } from 'next/navigation'
@@ -51,6 +51,8 @@ const DynamicForm: React.FC = () => {
   const [inputPairs, setInputPairs] = useState<InputPair[]>([{ id: crypto.randomUUID(), detail: '', amount: '' }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gst, setGst] = useState<number>(0);
+  const [discount, setDiscount] = useState<number>(0);
   const router = useRouter()
 
   const handleDefaultFieldChange = (field: keyof DefaultFields, value: string | Date | null | undefined) => {
@@ -72,9 +74,12 @@ const DynamicForm: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    const newTotal = inputPairs.reduce((sum, pair) => sum + (parseFloat(pair.amount) || 0), 0);
-    setTotalAmount(newTotal);
-  }, [inputPairs]);
+    const subtotal = inputPairs.reduce((sum, pair) => sum + (parseFloat(pair.amount) || 0), 0);
+    const gstAmount = subtotal * (gst / 100);
+    const totalWithGst = subtotal + gstAmount;
+    const finalTotal = Math.max(totalWithGst - discount, 0); // Ensure total doesn't go below 0
+    setTotalAmount(finalTotal);
+  }, [inputPairs, gst, discount]);
 
   const addInputPair = () => {
     setInputPairs([...inputPairs, { id: crypto.randomUUID(), detail: '', amount: '' }]);
@@ -160,7 +165,9 @@ const DynamicForm: React.FC = () => {
         body: JSON.stringify({ 
           defaultFields,
           inputPairs: nonEmptyPairs, 
-          totalAmount 
+          totalAmount ,
+          gst, 
+          discount 
         }),
       });
   
@@ -228,7 +235,7 @@ const DynamicForm: React.FC = () => {
              format="h:mm a"
               />
 
-            <label  className='-mb-4' htmlFor="deliveryDateTime">Delivery Stattion</label>
+            <label  className='-mb-4' htmlFor="deliveryDateTime">Delivery Station</label>
           <Input
             type="text"
             value={defaultFields.deliveryStation}
@@ -277,20 +284,7 @@ const DynamicForm: React.FC = () => {
             onChange={(e) => handleDefaultFieldChange('seat', e.target.value)}
             placeholder="Seat"
           />
-           <label  className='-mb-4' htmlFor="deliveryDateTime">Payment Method</label>
-          <Input
-            type="text"
-            value={defaultFields.paymentMode}
-            onChange={(e) => handleDefaultFieldChange('paymentMode', e.target.value)}
-            placeholder="Payment Mode"
-          />
-           <label  className='-mb-4' htmlFor="deliveryDateTime">Customer Note</label>
-          <Input
-            type="text"
-            value={defaultFields.customerNote}
-            onChange={(e) => handleDefaultFieldChange('customerNote', e.target.value)}
-            placeholder="Customer Note"
-          />
+       
           <h3 className='font-semibold text-xl'>Items:</h3>
           {inputPairs.map((pair) => (
             <div key={pair.id}>
@@ -312,13 +306,50 @@ const DynamicForm: React.FC = () => {
               </div>
             </div>
           ))}
-          
+
+
+
+<label className='-mb-4' htmlFor="gst">GST (%)</label>
+<Input
+  type="number"
+  value={gst}
+  onChange={(e) => setGst(Number(e.target.value))}
+  placeholder="Enter GST percentage"
+/>
+
+      <label className='-mb-4' htmlFor="discount">Discount</label>
+      <Input
+       type="number"
+        value={discount}
+        onChange={(e) => setDiscount(Number(e.target.value))}
+  placeholder="Enter discount amount"
+/>
+
+
+
           {/* Remaining Default Fields */}
         
-          
-          <div className='mt-4  '>
-            <p className='font-semibold text-2xl'>Total Amount: {totalAmount.toFixed(2)}</p>
-          </div>
+     
+<label  className='-mb-4' htmlFor="deliveryDateTime">Payment Method</label>
+          <Input
+            type="text"
+            value={defaultFields.paymentMode}
+            onChange={(e) => handleDefaultFieldChange('paymentMode', e.target.value)}
+            placeholder="Payment Mode"
+          />
+           <label  className='-mb-4' htmlFor="deliveryDateTime">Customer Note</label>
+          <Input
+            type="text"
+            value={defaultFields.customerNote}
+            onChange={(e) => handleDefaultFieldChange('customerNote', e.target.value)}
+            placeholder="Customer Note"
+          />
+         <div className='mt-4'>
+  <p className='font-semibold text-xl'>Subtotal: {inputPairs.reduce((sum, pair) => sum + (parseFloat(pair.amount) || 0), 0).toFixed(2)}</p>
+  <p className='font-semibold text-xl'>GST ({gst}%): {(inputPairs.reduce((sum, pair) => sum + (parseFloat(pair.amount) || 0), 0) * (gst / 100)).toFixed(2)}</p>
+  <p className='font-semibold text-xl'>Discount: {discount.toFixed(2)}</p>
+  <p className='font-semibold text-2xl'>Total Amount: {totalAmount.toFixed(2)}</p>
+</div>
           <div className='mt-2 flex flex-col sm:flex-row gap-10'>
            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? <> 

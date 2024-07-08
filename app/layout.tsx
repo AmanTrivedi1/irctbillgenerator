@@ -7,7 +7,7 @@ import Sidebar from "./components/sidebar";
 const poppins = Poppins({ subsets: ["latin"] , weight:["300" , "400" , "500" , "600"] });
 
 export const metadata: Metadata = {
-  title: "IRCTC",
+  title: "The Chef's Touch",
   description: "One place bill",
 };
 
